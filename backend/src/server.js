@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const scheduler = require('./scheduler');
 const cache = require('./cache');
 
@@ -8,6 +9,11 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
+
+// Serve dashboard.html at the root
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../../dashboard.html'));
+});
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', lastUpdated: cache.get().lastUpdated });
