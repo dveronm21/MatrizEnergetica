@@ -15,18 +15,28 @@ function parseHour(isoString) {
   return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
+function roundTo5min(isoString) {
+  if (!isoString) return null;
+  const d = new Date(isoString);
+  d.setSeconds(0, 0);
+  d.setMinutes(Math.floor(d.getMinutes() / 5) * 5);
+  return d.getTime();
+}
+
 function mergeTimeSeries(demandaArr, generacionArr) {
   const map = new Map();
 
   (demandaArr || []).forEach(d => {
-    const key = d.fecha;
-    map.set(key, { hora: parseHour(key), demanda: d.demHoy ?? null });
+    if (d.demHoy == null) return;
+    const key = roundTo5min(d.fecha);
+    if (key == null) return;
+    map.set(key, { hora: parseHour(d.fecha), ts: key, demanda: d.demHoy, demAyer: d.demAyer ?? null });
   });
 
   (generacionArr || []).forEach(g => {
-    // Align to nearest 5-min interval from demand data
-    const key = g.fecha;
-    const existing = map.get(key) || { hora: parseHour(key) };
+    const key = roundTo5min(g.fecha);
+    if (key == null) return;
+    const existing = map.get(key) || { hora: parseHour(g.fecha), ts: key };
     existing.generacion = g.sumTotal ?? null;
     if (existing.demanda != null && existing.generacion != null && existing.demanda > 0) {
       existing.pctGeneracion = +((existing.generacion / existing.demanda) * 100).toFixed(1);
@@ -36,13 +46,14 @@ function mergeTimeSeries(demandaArr, generacionArr) {
 
   return Array.from(map.values())
     .filter(d => d.hora)
-    .sort((a, b) => a.hora.localeCompare(b.hora));
+    .sort((a, b) => a.ts - b.ts);
 }
 
 const SERIES = [
-  { key: 'demanda', label: 'Demanda', color: '#e53e3e' },
-  { key: 'generacion', label: 'Generación Cuyo', color: '#1a9e9e' },
-  { key: 'pctGeneracion', label: '%Gen/Dem', color: '#805ad5' },
+  { key: 'demanda',      label: 'Demanda hoy',      color: '#e53e3e' },
+  { key: 'demAyer',      label: 'Demanda ayer',      color: '#fc8181' },
+  { key: 'generacion',   label: 'Generación Cuyo',   color: '#1a9e9e' },
+  { key: 'pctGeneracion',label: '%Gen/Dem',           color: '#805ad5' },
 ];
 
 function CustomTooltip({ active, payload, label }) {
@@ -61,7 +72,7 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 export default function RegionalChart({ sanjuanDemanda, cuyoGeneracion }) {
-  const [visible, setVisible] = useState({ demanda: true, generacion: true, pctGeneracion: false });
+  const [visible, setVisible] = useState({ demanda: true, demAyer: false, generacion: true, pctGeneracion: false });
   const chartData = mergeTimeSeries(sanjuanDemanda, cuyoGeneracion);
 
   const toggle = key => setVisible(v => ({ ...v, [key]: !v[key] }));
@@ -124,8 +135,12 @@ export default function RegionalChart({ sanjuanDemanda, cuyoGeneracion }) {
           />
           <Tooltip content={<CustomTooltip />} />
           {visible.demanda && (
-            <Line yAxisId="mw" type="monotone" dataKey="demanda" name="Demanda"
+            <Line yAxisId="mw" type="monotone" dataKey="demanda" name="Demanda hoy"
               stroke="#e53e3e" dot={false} strokeWidth={2} connectNulls />
+          )}
+          {visible.demAyer && (
+            <Line yAxisId="mw" type="monotone" dataKey="demAyer" name="Demanda ayer"
+              stroke="#fc8181" dot={false} strokeWidth={1.5} strokeDasharray="4 2" connectNulls />
           )}
           {visible.generacion && (
             <Line yAxisId="mw" type="monotone" dataKey="generacion" name="Generación Cuyo"

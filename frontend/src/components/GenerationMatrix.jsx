@@ -9,7 +9,7 @@ import {
 } from 'recharts';
 
 const COLORS = {
-  renovableLey: '#52b788',   // Renovable Ley 26.190 (green)
+  renovableLey: '#52b788',   // Renovable Ley 27.191 (green)
   hidraulico: '#1a9e9e',     // Renovable Hidro>50MW (teal)
   termico: '#f4845f',        // Térmico (orange)
   nuclear: '#fbbf24',        // Nuclear (yellow)
@@ -17,7 +17,7 @@ const COLORS = {
 };
 
 const LABELS = {
-  renovableLey: 'Renovable Ley 26.190',
+  renovableLey: 'Renovable Ley 27.191',
   hidraulico: 'Renovable Hidro>50MW',
   termico: 'Térmico',
   nuclear: 'Nuclear',
@@ -27,29 +27,55 @@ const LABELS = {
 function buildSlices(snapshot) {
   if (!snapshot) return [];
   const { hidraulico = 0, termico = 0, nuclear = 0, renovable = 0, importacion = 0, sumTotal = 1 } = snapshot;
+  const totalSinImport = (hidraulico + termico + nuclear + renovable) || 1;
   const total = sumTotal || 1;
 
   return [
-    { key: 'renovableLey', value: renovable, pct: Math.round((renovable / total) * 100) },
-    { key: 'hidraulico', value: hidraulico, pct: Math.round((hidraulico / total) * 100) },
-    { key: 'termico', value: termico, pct: Math.round((termico / total) * 100) },
-    { key: 'nuclear', value: nuclear, pct: Math.round((nuclear / total) * 100) },
+    { key: 'renovableLey', value: renovable, pct: Math.round((renovable / totalSinImport) * 100) },
+    { key: 'hidraulico', value: hidraulico, pct: Math.round((hidraulico / totalSinImport) * 100) },
+    { key: 'termico', value: termico, pct: Math.round((termico / totalSinImport) * 100) },
+    { key: 'nuclear', value: nuclear, pct: Math.round((nuclear / totalSinImport) * 100) },
     { key: 'importacion', value: importacion, pct: Math.round((importacion / total) * 100) },
   ];
 }
 
-function CenterLabel({ viewBox, renovablePct, noRenovablePct }) {
+const RADIAN = Math.PI / 180;
+
+function SliceLabel({ cx, cy, midAngle, innerRadius, outerRadius, pct }) {
+  if (!pct || pct < 4) return null;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  return (
+    <text
+      x={x} y={y}
+      fill="#fff"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize={11}
+      fontWeight={700}
+      style={{ pointerEvents: 'none' }}
+    >
+      {pct}%
+    </text>
+  );
+}
+
+function CenterLabel({ viewBox, ley27Pct, incHidroPct }) {
   const { cx, cy } = viewBox;
   return (
     <>
-      <text x={cx} y={cy - 12} textAnchor="middle" fill="#52b788" fontSize={14} fontWeight={700}>
-        Renovable
+      <text x={cx} y={cy - 22} textAnchor="middle" fill="#52b788" fontSize={11} fontWeight={600}>
+        Ley 27.191
       </text>
-      <text x={cx} y={cy + 6} textAnchor="middle" fill="#52b788" fontSize={22} fontWeight={700}>
-        {renovablePct}%
+      <text x={cx} y={cy - 6} textAnchor="middle" fill="#52b788" fontSize={20} fontWeight={700}>
+        {ley27Pct}%
       </text>
-      <text x={cx} y={cy + 26} textAnchor="middle" fill="#718096" fontSize={11}>
-        No Renov. {noRenovablePct}%
+      <text x={cx} y={cy + 14} textAnchor="middle" fill="#1a9e9e" fontSize={11} fontWeight={600}>
+        Inc. Hidro
+      </text>
+      <text x={cx} y={cy + 30} textAnchor="middle" fill="#1a9e9e" fontSize={18} fontWeight={700}>
+        {incHidroPct}%
       </text>
     </>
   );
@@ -82,15 +108,16 @@ function renderLegend(slices) {
 export default function GenerationMatrix({ demandaActual }) {
   // Use the snapshot (single object) from ObtieneParticipacionEnergiaPorRegion
   const slices = buildSlices(demandaActual);
-  const renovablePct = slices
+  const ley27Pct = slices.find(s => s.key === 'renovableLey')?.pct ?? 0;
+  const incHidroPct = slices
     .filter(s => s.key === 'renovableLey' || s.key === 'hidraulico')
     .reduce((sum, s) => sum + s.pct, 0);
-  const noRenovablePct = 100 - renovablePct;
 
   return (
-    <div style={styles.card}>
+    <div style={{ ...styles.card, borderLeft: '3px solid #6b7280' }}>
       <h2 style={styles.title}>Matriz de Generación Eléctrica</h2>
       <p style={styles.subtitle}>% de participación</p>
+      <p style={styles.badge}>SADI Nacional</p>
 
       <ResponsiveContainer width="100%" height={280}>
         <PieChart>
@@ -104,11 +131,13 @@ export default function GenerationMatrix({ demandaActual }) {
             startAngle={90}
             endAngle={-270}
             paddingAngle={1}
+            label={<SliceLabel />}
+            labelLine={false}
           >
             {slices.map(s => (
               <Cell key={s.key} fill={COLORS[s.key]} stroke="#fff" strokeWidth={2} />
             ))}
-            <CenterLabel renovablePct={renovablePct} noRenovablePct={noRenovablePct} />
+            <CenterLabel ley27Pct={ley27Pct} incHidroPct={incHidroPct} />
           </Pie>
           <Tooltip content={<CustomTooltip />} />
         </PieChart>
@@ -137,6 +166,13 @@ const styles = {
     color: '#1a73e8',
     textAlign: 'center',
     marginBottom: 4,
+  },
+  badge: {
+    fontSize: 11,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 4,
+    marginTop: 0,
   },
   legend: {
     display: 'flex',

@@ -11,17 +11,26 @@ function formatTime(isoString) {
   return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
-export default function DemandCard({ demandaActual }) {
-  const total = demandaActual?.sumTotal ?? null;
-  const fecha = demandaActual?.fecha ?? null;
+export default function DemandCard({ sanjuanDemanda }) {
+  const last = sanjuanDemanda?.findLast(d => d.demHoy != null) ?? null;
+  const hoy = last?.demHoy ?? null;
+  const ayer = last?.demAyer ?? null;
+  const fecha = last?.fecha ?? null;
+  const diff = hoy != null && ayer != null ? hoy - ayer : null;
+  const diffPct = diff != null && ayer ? ((diff / ayer) * 100).toFixed(1) : null;
+  const diffColor = diff == null ? '#718096' : diff >= 0 ? '#e53e3e' : '#52b788';
+  const diffArrow = diff == null ? '' : diff >= 0 ? '▲' : '▼';
 
   return (
     <div style={styles.card}>
-      <h2 style={styles.title}>Demanda Actual SADI</h2>
-      <p style={styles.value}>{formatMW(total)} <span style={styles.unit}>MW</span></p>
-      <p style={styles.subtitle}>
-        Actualizado a las {formatTime(fecha)}
-      </p>
+      <h2 style={styles.title}>Demanda Actual — San Juan</h2>
+      <p style={styles.value}>{formatMW(hoy)} <span style={styles.unit}>MW</span></p>
+      <p style={styles.subtitle}>Actualizado a las {formatTime(fecha)}</p>
+      {diffPct != null && (
+        <p style={{ ...styles.diff, color: diffColor }}>
+          {diffArrow} {Math.abs(diff).toLocaleString('es-AR')} MW ({Math.abs(diffPct)}%) vs ayer
+        </p>
+      )}
     </div>
   );
 }
@@ -55,7 +64,12 @@ const styles = {
   },
   subtitle: {
     fontSize: 13,
-    color: '#1a73e8',
+    color: '#718096',
     fontWeight: 500,
+  },
+  diff: {
+    fontSize: 13,
+    fontWeight: 600,
+    marginTop: 4,
   },
 };
