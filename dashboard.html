@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matriz Energética — San Juan</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; background: #f0f4f8; color: #1a202c; min-height: 100vh; }
+
+    /* ── Header ── */
+    header {
+      background: #fff; border-bottom: 1px solid #e2e8f0;
+      padding: 12px 28px; display: flex; align-items: center;
+      justify-content: space-between; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { font-size: 22px; }
+    .logo-text { font-size: 18px; font-weight: 700; color: #1a73e8; letter-spacing: -.3px; }
+    .logo-sub  { font-size: 13px; color: #718096; font-weight: 500; }
+
+    /* ── Status bar ── */
+    .status-bar {
+      background: #fff; border-radius: 10px;
+      padding: 10px 20px; display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap; gap: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06); font-size: 13px; color: #4a5568;
+    }
+    .status-left { display: flex; align-items: center; gap: 10px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #48bb78; flex-shrink: 0; }
+    .dot.yellow { background: #ecc94b; }
+    .dot.red    { background: #fc8181; }
+    .countdown  { font-size: 12px; color: #a0aec0; }
+    .btn-refresh {
+      background: #1a73e8; color: #fff; border: none; border-radius: 8px;
+      padding: 6px 14px; font-size: 13px; font-weight: 500; cursor: pointer;
+      font-family: inherit; transition: background .15s;
+    }
+    .btn-refresh:hover { background: #1558c0; }
+    .btn-refresh:disabled { background: #90c2f8; cursor: not-allowed; }
+
+    /* ── Source banner ── */
+    .banner {
+      border-radius: 10px; padding: 10px 16px;
+      font-size: 13px; display: flex; align-items: center; gap: 8px;
+    }
+    .banner.mock { background: #fffbeb; border: 1px solid #fbd38d; color: #744210; }
+    .banner.live { background: #f0fff4; border: 1px solid #9ae6b4; color: #276749; }
+
+    /* ── Layout ── */
+    main {
+      max-width: 1100px; margin: 0 auto;
+      padding: 22px 20px; display: flex; flex-direction: column; gap: 20px;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-5 { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+
+    /* ── Cards ── */
+    .card {
+      background: #fff; border-radius: 12px;
+      padding: 24px 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .card-title { font-size: 15px; font-weight: 600; color: #2d3748; }
+    .card-sub   { font-size: 12px; color: #718096; margin-top: 2px; }
+
+    /* ── Demand number ── */
+    .demand-card { text-align: center; }
+    .demand-card .card-title { font-size: 16px; margin-bottom: 10px; }
+    .demand-mw {
+      font-size: 56px; font-weight: 700; color: #1a73e8;
+      line-height: 1; margin-bottom: 8px;
+    }
+    .demand-mw span { font-size: 26px; }
+    .demand-ts { font-size: 13px; color: #1a73e8; font-weight: 500; }
+
+    /* ── Donut center label ── */
+    .donut-wrap { position: relative; width: 100%; max-width: 280px; margin: 4px auto 0; }
+    .donut-center {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      text-align: center; pointer-events: none;
+    }
+    .donut-center .pct-renov { font-size: 22px; font-weight: 700; color: #52b788; line-height: 1.2; }
+    .donut-center .label-renov { font-size: 12px; color: #52b788; }
+    .donut-center .pct-no    { font-size: 13px; color: #718096; margin-top: 4px; }
+
+    /* ── Donut legend ── */
+    .donut-legend {
+      display: flex; flex-wrap: wrap; gap: 8px 14px;
+      justify-content: center; margin-top: 10px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #4a5568; }
+    .legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Chart header ── */
+    .chart-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+    .toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .toggle-btn {
+      padding: 4px 12px; font-size: 12px; font-weight: 500;
+      border: 1.5px solid; border-radius: 20px; cursor: pointer;
+      font-family: inherit; transition: all .15s; background: transparent;
+    }
+
+    /* ── Breakdown items ── */
+    .breakdown-item { display: flex; align-items: flex-start; gap: 10px; }
+    .breakdown-bar  { width: 4px; height: 44px; border-radius: 4px; flex-shrink: 0; margin-top: 2px; }
+    .breakdown-label { font-size: 12px; color: #718096; margin-bottom: 3px; }
+    .breakdown-value { font-size: 18px; font-weight: 700; }
+    .breakdown-pct   { font-size: 12px; color: #a0aec0; font-weight: 400; }
+
+    /* ── Spinner ── */
+    .spinner-wrap { text-align: center; padding: 60px 20px; color: #718096; font-size: 15px; }
+    .spinner {
+      width: 40px; height: 40px; border: 3px solid #e2e8f0;
+      border-top-color: #1a73e8; border-radius: 50%;
+      animation: spin .8s linear infinite; margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center; padding: 14px; font-size: 12px;
+      color: #a0aec0; border-top: 1px solid #e2e8f0; background: #fff;
+    }
+    footer a { color: #1a73e8; text-decoration: none; }
+
+    @media (max-width: 640px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .demand-mw { font-size: 44px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-icon">⚡</span>
+    <span class="logo-text">Matriz Energética</span>
+  </div>
+  <span class="logo-sub">San Juan · SADI</span>
+</header>
+
+<main>
+  <div id="spinner" class="spinner-wrap">
+    <div class="spinner"></div>
+    <p>Conectando con CAMMESA…</p>
+  </div>
+
+  <div id="dashboard" style="display:none; display:none; flex-direction:column; gap:20px;">
+
+    <!-- Source banner -->
+    <div id="banner" class="banner mock" style="display:none"></div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <div class="status-left">
+        <span class="dot" id="status-dot"></span>
+        <span>Datos CAMMESA: <strong id="status-ts">—</strong></span>
+        <span class="countdown" id="countdown"></span>
+      </div>
+      <button class="btn-refresh" id="btn-refresh" onclick="manualRefresh()">↻ Actualizar ahora</button>
+    </div>
+
+    <!-- Row 1: Demand + Donut -->
+    <div class="grid-2">
+      <!-- Demanda Actual SADI -->
+      <div class="card demand-card">
+        <div class="card-title">Demanda Actual SADI</div>
+        <div class="demand-mw"><span id="demand-mw">—</span> <span>MW</span></div>
+        <div class="demand-ts">Actualizado a las <span id="demand-ts">—</span></div>
+      </div>
+
+      <!-- Matriz de Generación -->
+      <div class="card">
+        <div class="card-title" style="text-align:center">Matriz de Generación Eléctrica</div>
+        <div class="card-sub" style="text-align:center;color:#1a73e8">% de participación</div>
+        <div class="donut-wrap" style="height:230px">
+          <canvas id="donut-chart"></canvas>
+          <div class="donut-center">
+            <div class="label-renov">Renovable</div>
+            <div class="pct-renov" id="pct-renov">—%</div>
+            <div class="pct-no" id="pct-no">No Renov. —%</div>
+          </div>
+        </div>
+        <div class="donut-legend" id="donut-legend"></div>
+      </div>
+    </div>
+
+    <!-- Row 2: Line chart -->
+    <div class="card">
+      <div class="chart-header">
+        <div>
+          <div class="card-title">Demanda y Generación Real del SADI y Regionales</div>
+          <div class="card-sub">Demanda Real (MW) — Región: <strong>San Juan</strong> · Generación: región Cuyo</div>
+        </div>
+        <div class="toggle-group" id="toggle-group"></div>
+      </div>
+      <canvas id="line-chart" style="max-height:300px"></canvas>
+    </div>
+
+    <!-- Row 3: Cuyo breakdown -->
+    <div class="card">
+      <div class="card-title">Generación Región Cuyo — Desglose actual</div>
+      <div class="card-sub" id="cuyo-total" style="margin-bottom:16px">Total: — MW · Cuyo incluye San Juan, Mendoza y San Luis</div>
+      <div class="grid-5" id="cuyo-grid"></div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  Fuente: <a href="https://api.cammesa.com" target="_blank">api.cammesa.com</a>
+  · Backend sondea CAMMESA cada 5 min · Pantalla refresca cada 60 seg
+</footer>
+
+<script>
+/* ─────────────────────────────────────────────
+   CONFIG
+───────────────────────────────────────────── */
+const BACKEND   = 'http://localhost:3001/api/dashboard';
+const CAMMESA   = 'https://api.cammesa.com/demanda-svc';
+const SADI_ID   = 1002;
+const SANJUAN_ID= 1922;
+const CUYO_ID   = 429;
+const REFRESH_S = 60; // seconds between auto-refresh
+
+const COLORS = {
+  renovable   : '#52b788',
+  hidraulico  : '#1a9e9e',
+  termico     : '#f4845f',
+  nuclear     : '#fbbf24',
+  importacion : '#a78bfa',
+};
+const LABELS = {
+  renovable   : 'Renovable Ley 26.190',
+  hidraulico  : 'Renovable Hidro>50MW',
+  termico     : 'Térmico',
+  nuclear     : 'Nuclear',
+  importacion : 'Importación',
+};
+
+/* ─────────────────────────────────────────────
+   MOCK DATA (fallback when no backend + no CORS)
+───────────────────────────────────────────── */
+function makeMockData() {
+  const now   = new Date();
+  const today = now.toISOString().slice(0, 10);
+  const demandaActual = {
+    fecha: now.toISOString(),
+    sumTotal: 13614, hidraulico: 1687, termico: 6434,
+    nuclear: 666, renovable: 4199, importacion: 626,
+  };
+
+  // 288 five-minute intervals for today
+  const sanjuanDemanda = [];
+  const cuyoGeneracion  = [];
+  for (let m = 0; m < 1440; m += 5) {
+    const h = Math.floor(m / 60), mi = m % 60;
+    const ts = `${today}T${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}:00.000-0300`;
+    const phase = (m / 1440) * 2 * Math.PI;
+    // San Juan demand: base 185 + daily curve
+    const dem = Math.round(185 + 45 * Math.sin(phase - 1.2) + (Math.random() - .5) * 12);
+    sanjuanDemanda.push({ fecha: ts, demHoy: dem, demAyer: dem + Math.round((Math.random()-.5)*20) });
+  }
+  // Cuyo gen: hourly
+  for (let h = 0; h < 24; h++) {
+    const ts = `${today}T${String(h).padStart(2,'0')}:00:00.000-0300`;
+    const phase = (h / 24) * 2 * Math.PI;
+    const base = 350 + 80 * Math.sin(phase - 1) + (Math.random() - .5) * 30;
+    cuyoGeneracion.push({
+      fecha: ts,
+      sumTotal: Math.round(base),
+      hidraulico : Math.round(base * 0.13),
+      termico    : Math.round(base * 0.82),
+      nuclear    : 0,
+      renovable  : Math.round(base * 0.05),
+      importacion: 0,
+    });
+  }
+  return {
+    demandaActual,
+    matrizGeneracion: [],
+    sanjuanDemanda,
+    cuyoGeneracion,
+    cuyoParticipacion: demandaActual,
+    lastUpdated: now.toISOString(),
+  };
+}
+
+/* ─────────────────────────────────────────────
+   DATA FETCHING
+───────────────────────────────────────────── */
+let dataSource = 'loading';
+
+async function fetchFromBackend() {
+  const res = await fetch(BACKEND, { signal: AbortSignal.timeout(5000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return { data: await res.json(), source: 'backend' };
+}
+
+async function fetchFromCammesa() {
+  const [demandaActual, matrizGeneracion, sanjuanDemanda, cuyoGeneracion, cuyoParticipacion] =
+    await Promise.all([
+      fetch(`${CAMMESA}/generacion/ObtieneParticipacionEnergiaPorRegion?id_region=${SADI_ID}`, { signal: AbortSignal.timeout(8000) }).then(r => r.json()),
+      fetch(`${CAMMESA}/generacion/ObtieneGeneracioEnergiaPorRegion?id_region=${SADI_ID}`,     { signal: AbortSignal.timeout(8000) }).then(r => r.json()),
+      fetch(`${CAMMESA}/demanda/ObtieneDemandaYTemperaturaRegion?id_region=${SANJUAN_ID}`,     { signal: AbortSignal.timeout(8000) }).then(r => r.json()),
+      fetch(`${CAMMESA}/generacion/ObtieneGeneracioEnergiaPorRegion?id_region=${CUYO_ID}`,     { signal: AbortSignal.timeout(8000) }).then(r => r.json()),
+      fetch(`${CAMMESA}/generacion/ObtieneParticipacionEnergiaPorRegion?id_region=${CUYO_ID}`, { signal: AbortSignal.timeout(8000) }).then(r => r.json()),
+    ]);
+  return {
+    data: { demandaActual, matrizGeneracion, sanjuanDemanda, cuyoGeneracion, cuyoParticipacion, lastUpdated: new Date().toISOString() },
+    source: 'cammesa-direct',
+  };
+}
+
+async function loadData() {
+  // 1. Try backend proxy
+  try {
+    const result = await fetchFromBackend();
+    dataSource = 'backend';
+    return result;
+  } catch (_) {}
+
+  // 2. Try CAMMESA direct (requires CORS)
+  try {
+    const result = await fetchFromCammesa();
+    dataSource = 'cammesa-direct';
+    return result;
+  } catch (_) {}
+
+  // 3. Mock data
+  dataSource = 'mock';
+  return { data: makeMockData(), source: 'mock' };
+}
+
+/* ─────────────────────────────────────────────
+   CHART INSTANCES
+───────────────────────────────────────────── */
+let donutChart = null;
+let lineChart  = null;
+const lineVisible = { demanda: true, generacion: true, pctGeneracion: false };
+
+/* ─────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────── */
+function fmt(n)  { return n != null ? Math.round(n).toLocaleString('es-AR') : '—'; }
+function pct(n, total) { return total ? Math.round((n / total) * 100) : 0; }
+
+function fmtTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleString('es-AR', {
+    day:'2-digit', month:'2-digit', year:'numeric',
+    hour:'2-digit', minute:'2-digit', second:'2-digit', hour12: false,
+  });
+}
+
+function parseHour(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function mergeTimeSeries(demArr, genArr) {
+  const map = new Map();
+  (demArr || []).forEach(d => {
+    const k = d.fecha;
+    map.set(k, { hora: parseHour(k), demanda: d.demHoy ?? null });
+  });
+  (genArr || []).forEach(g => {
+    const k = g.fecha;
+    const e = map.get(k) || { hora: parseHour(k) };
+    e.generacion = g.sumTotal ?? null;
+    if (e.demanda > 0 && e.generacion != null) {
+      e.pctGeneracion = +((e.generacion / e.demanda) * 100).toFixed(1);
+    }
+    map.set(k, e);
+  });
+  return Array.from(map.values()).filter(d => d.hora).sort((a, b) => a.hora.localeCompare(b.hora));
+}
+
+/* ─────────────────────────────────────────────
+   RENDER
+───────────────────────────────────────────── */
+function renderBanner(source) {
+  const el = document.getElementById('banner');
+  if (source === 'mock') {
+    el.className = 'banner mock';
+    el.innerHTML = '⚠️ <strong>Datos de demostración</strong> — CAMMESA no responde o hay restricción CORS. Para datos reales ejecutá <code>cd backend && node src/server.js</code> y recargá.';
+    el.style.display = 'flex';
+  } else if (source === 'cammesa-direct') {
+    el.className = 'banner live';
+    el.innerHTML = '✅ <strong>Datos en vivo</strong> — conectado directamente a api.cammesa.com';
+    el.style.display = 'flex';
+  } else {
+    el.className = 'banner live';
+    el.innerHTML = '✅ <strong>Datos en vivo</strong> — conectado via backend proxy (localhost:3001)';
+    el.style.display = 'flex';
+  }
+}
+
+function renderDemandCard(snap) {
+  document.getElementById('demand-mw').textContent = fmt(snap?.sumTotal);
+  document.getElementById('demand-ts').textContent = fmtTime(snap?.fecha);
+}
+
+function renderStatusBar(lastUpdated, source) {
+  document.getElementById('status-ts').textContent = fmtDateTime(lastUpdated);
+  const dot = document.getElementById('status-dot');
+  dot.className = 'dot' + (source === 'mock' ? ' yellow' : '');
+}
+
+function renderDonut(snap) {
+  if (!snap) return;
+  const { hidraulico=0, termico=0, nuclear=0, renovable=0, importacion=0, sumTotal=1 } = snap;
+  const total = sumTotal || 1;
+
+  const renovPct   = pct(renovable + hidraulico, total);
+  const noRenovPct = 100 - renovPct;
+  document.getElementById('pct-renov').textContent = renovPct + '%';
+  document.getElementById('pct-no').textContent    = 'No Renov. ' + noRenovPct + '%';
+
+  const cats = ['renovable','hidraulico','termico','nuclear','importacion'];
+  const vals = cats.map(k => ({ renovable, hidraulico, termico, nuclear, importacion }[k]));
+
+  // Legend
+  const leg = document.getElementById('donut-legend');
+  leg.innerHTML = cats.map(k => `
+    <span class="legend-item">
+      <span class="legend-dot" style="background:${COLORS[k]}"></span>
+      ${LABELS[k]} ${pct({renovable,hidraulico,termico,nuclear,importacion}[k], total)}%
+    </span>`).join('');
+
+  const ctx = document.getElementById('donut-chart').getContext('2d');
+  if (donutChart) { donutChart.data.datasets[0].data = vals; donutChart.update(); return; }
+
+  donutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: cats.map(k => LABELS[k]),
+      datasets: [{
+        data: vals,
+        backgroundColor: cats.map(k => COLORS[k]),
+        borderWidth: 2,
+        borderColor: '#fff',
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      cutout: '62%',
+      animation: { animateRotate: true, duration: 600 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${fmt(ctx.raw)} MW (${pct(ctx.raw, total)}%)`,
+          }
+        }
+      }
+    }
+  });
+}
+
+function buildToggles(series) {
+  const tg = document.getElementById('toggle-group');
+  tg.innerHTML = '';
+  series.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'toggle-btn';
+    btn.dataset.key = s.key;
+    btn.textContent = s.label;
+    btn.style.borderColor = s.color;
+    applyToggleStyle(btn, s.color, lineVisible[s.key]);
+    btn.onclick = () => {
+      lineVisible[s.key] = !lineVisible[s.key];
+      applyToggleStyle(btn, s.color, lineVisible[s.key]);
+      updateLineVisibility(series);
+    };
+    tg.appendChild(btn);
+  });
+}
+
+function applyToggleStyle(btn, color, active) {
+  btn.style.background  = active ? color : 'transparent';
+  btn.style.color       = active ? '#fff' : color;
+}
+
+function updateLineVisibility(series) {
+  if (!lineChart) return;
+  series.forEach((s, i) => {
+    lineChart.data.datasets[i].hidden = !lineVisible[s.key];
+  });
+  lineChart.update();
+}
+
+function renderLineChart(sanjuanDemanda, cuyoGeneracion) {
+  const merged = mergeTimeSeries(sanjuanDemanda, cuyoGeneracion);
+  const labels = merged.map(d => d.hora);
+
+  const series = [
+    { key: 'demanda',      label: 'Demanda',        color: '#e53e3e', yAxisID: 'mw',  data: merged.map(d => d.demanda) },
+    { key: 'generacion',   label: 'Generación Cuyo', color: '#1a9e9e', yAxisID: 'mw',  data: merged.map(d => d.generacion) },
+    { key: 'pctGeneracion', label: '%Gen/Dem',       color: '#805ad5', yAxisID: 'pct', data: merged.map(d => d.pctGeneracion) },
+  ];
+
+  buildToggles(series);
+
+  const ctx = document.getElementById('line-chart').getContext('2d');
+
+  if (lineChart) {
+    lineChart.data.labels = labels;
+    series.forEach((s, i) => { lineChart.data.datasets[i].data = s.data; });
+    lineChart.update();
+    return;
+  }
+
+  lineChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: series.map(s => ({
+        label: s.label,
+        data: s.data,
+        borderColor: s.color,
+        backgroundColor: s.color + '18',
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.3,
+        fill: false,
+        yAxisID: s.yAxisID,
+        hidden: !lineVisible[s.key],
+        spanGaps: true,
+      }))
+    },
+    options: {
+      animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = ctx.parsed.y;
+              if (v == null) return null;
+              const unit = ctx.dataset.yAxisID === 'pct' ? '%' : ' MW';
+              return ` ${ctx.dataset.label}: ${v.toLocaleString('es-AR')}${unit}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { maxTicksLimit: 12, font: { size: 11 }, color: '#718096' },
+          grid:  { color: '#f0f4f8' },
+        },
+        mw: {
+          position: 'left',
+          title: { display: true, text: 'MW', font: { size: 11 }, color: '#718096' },
+          ticks: { font: { size: 11 }, color: '#718096' },
+          grid:  { color: '#e2e8f0' },
+        },
+        pct: {
+          position: 'right',
+          title: { display: !lineVisible.pctGeneracion ? false : true, text: '%', font: { size: 11 }, color: '#718096' },
+          ticks: { font: { size: 11 }, color: '#718096', callback: v => v + '%' },
+          grid:  { drawOnChartArea: false },
+          display: lineVisible.pctGeneracion,
+        }
+      }
+    }
+  });
+}
+
+function renderCuyoBreakdown(snap) {
+  if (!snap) return;
+  const total = snap.sumTotal || 1;
+  document.getElementById('cuyo-total').textContent =
+    `Total: ${fmt(snap.sumTotal)} MW · Cuyo incluye San Juan, Mendoza y San Luis`;
+
+  const cats = ['renovable','hidraulico','termico','nuclear','importacion'];
+  const grid = document.getElementById('cuyo-grid');
+  grid.innerHTML = cats.map(k => {
+    const v = snap[k] ?? 0;
+    return `
+      <div class="breakdown-item">
+        <div class="breakdown-bar" style="background:${COLORS[k]}"></div>
+        <div>
+          <div class="breakdown-label">${LABELS[k]}</div>
+          <div class="breakdown-value" style="color:${COLORS[k]}">
+            ${fmt(v)} MW<span class="breakdown-pct"> (${pct(v, total)}%)</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderAll(data, source) {
+  renderBanner(source);
+  renderStatusBar(data.lastUpdated, source);
+  renderDemandCard(data.demandaActual);
+  renderDonut(data.demandaActual);
+  renderLineChart(data.sanjuanDemanda, data.cuyoGeneracion);
+  renderCuyoBreakdown(data.cuyoParticipacion || (data.cuyoGeneracion && data.cuyoGeneracion[data.cuyoGeneracion.length - 1]));
+}
+
+/* ─────────────────────────────────────────────
+   AUTO-REFRESH
+───────────────────────────────────────────── */
+let secondsLeft = REFRESH_S;
+let refreshTimer = null;
+
+function startCountdown() {
+  clearInterval(refreshTimer);
+  secondsLeft = REFRESH_S;
+  refreshTimer = setInterval(() => {
+    secondsLeft--;
+    const el = document.getElementById('countdown');
+    if (el) el.textContent = `· refresca en ${secondsLeft}s`;
+    if (secondsLeft <= 0) { clearInterval(refreshTimer); refresh(); }
+  }, 1000);
+}
+
+async function refresh() {
+  const btn = document.getElementById('btn-refresh');
+  if (btn) btn.disabled = true;
+  try {
+    const { data, source } = await loadData();
+    renderAll(data, source);
+  } catch (e) {
+    console.error('Refresh error:', e);
+  } finally {
+    if (btn) btn.disabled = false;
+    startCountdown();
+  }
+}
+
+async function manualRefresh() {
+  clearInterval(refreshTimer);
+  await refresh();
+}
+
+/* ─────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────── */
+(async () => {
+  try {
+    const { data, source } = await loadData();
+    document.getElementById('spinner').style.display = 'none';
+    const dash = document.getElementById('dashboard');
+    dash.style.display = 'flex';
+    renderAll(data, source);
+    startCountdown();
+  } catch (e) {
+    document.getElementById('spinner').innerHTML =
+      `<p style="color:#c53030">⚠️ Error: ${e.message}</p>
+       <button class="btn-refresh" style="margin-top:16px" onclick="location.reload()">Reintentar</button>`;
+  }
+})();
+</script>
+</body>
+</html>
