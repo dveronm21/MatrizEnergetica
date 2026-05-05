@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 
+// Estación meteorológica UNSJ vía proxy serverless (claves en Vercel env vars)
+const STATION_URL = '/api/weather';
+
+// Fallback: Open-Meteo si la estación no está disponible
 const SJ_LAT = -31.537;
 const SJ_LON = -68.536;
-const API_URL =
+const FALLBACK_URL =
   `https://api.open-meteo.com/v1/forecast?latitude=${SJ_LAT}&longitude=${SJ_LON}` +
-  `&current=temperature_2m,wind_speed_10m,wind_direction_10m,shortwave_radiation,cloud_cover,weather_code,is_day` +
+  `&current=temperature_2m,wind_speed_10m,wind_direction_10m,shortwave_radiation,cloud_cover,is_day` +
   `&wind_speed_unit=kmh&timezone=America%2FArgentina%2FSan_Juan`;
 
 const KEYFRAMES = `
@@ -152,36 +156,70 @@ export default function WeatherBar() {
   const [wx, setWx]       = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [source, setSource] = useState(null); // 'station' | 'fallback'
+
   useEffect(() => {
     injectKeyframes();
     let cancelled = false;
+
     async function load() {
+      // Intentar estación UNSJ primero
       try {
-        const res  = await fetch(API_URL);
+        const res  = await fetch(STATION_URL);
         const json = await res.json();
-        if (!cancelled) setWx(json.current);
-      } catch (_) {
-        // silently fail — weather is non-critical
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+        if (!json.error && !cancelled) {
+          setWx({ ...json, _source: 'station' });
+          setSource('station');
+          setLoading(false);
+          return;
+        }
+      } catch (_) { /* cae a fallback */ }
+
+      // Fallback Open-Meteo
+      try {
+        const res  = await fetch(FALLBACK_URL);
+        const json = await res.json();
+        if (!cancelled) {
+          const c = json.current;
+          setWx({
+            temperature: c.temperature_2m,
+            wind_speed:  c.wind_speed_10m,
+            wind_dir:    c.wind_direction_10m,
+            radiation:   c.shortwave_radiation,
+            cloud_cover: c.cloud_cover,
+            is_day:      c.is_day,
+            _source:     'fallback',
+          });
+          setSource('fallback');
+        }
+      } catch (_) { /* silently fail */ }
+
+      if (!cancelled) setLoading(false);
     }
+
     load();
-    const id = setInterval(load, 15 * 60 * 1000); // refresh cada 15 min (límite Open-Meteo)
+    // Estación: cada 60 s (Ecowitt permite 1 min) | Fallback: 15 min
+    const id = setInterval(load, 60 * 1000);
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
   if (loading || !wx) return null;
 
-  const temp      = Math.round(wx.temperature_2m ?? 0);
-  const wind      = Math.round(wx.wind_speed_10m ?? 0);
-  const windDir   = wx.wind_direction_10m ?? 0;
-  const radiation = Math.round(wx.shortwave_radiation ?? 0);
-  const cloud     = Math.round(wx.cloud_cover ?? 0);
-  const isDay     = wx.is_day ?? 1;
+  const temp      = Math.round(wx.temperature  ?? wx.temperature_2m  ?? 0);
+  const wind      = Math.round(wx.wind_speed   ?? wx.wind_speed_10m  ?? 0);
+  const windDir   = wx.wind_dir ?? wx.wind_direction_10m ?? 0;
+  const radiation = Math.round(wx.radiation    ?? wx.shortwave_radiation ?? 0);
+  const cloud     = Math.round(wx.cloud_cover  ?? 0);
+  const isDay     = wx.is_day ?? (radiation > 10 ? 1 : 0);
+  const isStation = wx._source === 'station';
 
   return (
     <div style={styles.row}>
+      {/* Indicador de fuente */}
+      <span style={{ ...styles.srcBadge, background: isStation ? '#dcfce7' : '#fef9c3', color: isStation ? '#166534' : '#854d0e' }}
+        title={isStation ? 'Datos de estación UNSJ vía Ecowitt' : 'Datos de modelo Open-Meteo (fallback)'}>
+        {isStation ? '📡 UNSJ' : '🛰️ Modelo'}
+      </span>
       {/* Radiación solar */}
       <div style={styles.pill} title={`Radiación solar: ${radiation} W/m²`}>
         <SunIcon radiation={radiation} isDay={isDay} />
@@ -228,6 +266,14 @@ const styles = {
     gap: 6,
     marginLeft: 'auto',
     flexWrap: 'wrap',
+  },
+  srcBadge: {
+    fontSize: 9,
+    fontWeight: 700,
+    padding: '2px 7px',
+    borderRadius: 20,
+    letterSpacing: 0.3,
+    whiteSpace: 'nowrap',
   },
   pill: {
     display: 'flex',
