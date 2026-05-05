@@ -7,6 +7,7 @@ import StatusBar from './components/StatusBar.jsx';
 import EnergyGauge from './components/EnergyGauge.jsx';
 import RenewableIndicator from './components/RenewableIndicator.jsx';
 import FuelMixBars from './components/FuelMixBars.jsx';
+import WeatherBar from './components/WeatherBar.jsx';
 
 export default function App() {
   const { data, loading, error, refresh } = useEnergyData();
@@ -45,11 +46,12 @@ export default function App() {
           <>
             <StatusBar lastUpdated={data.lastUpdated} onRefresh={refresh} />
 
-            {/* Leyenda de código de colores geográficos */}
+            {/* Leyenda de código de colores geográficos + clima en vivo */}
             <div style={styles.geoLegend}>
               <span style={{ ...styles.geoBadge, borderColor: '#1a73e8', color: '#1a73e8' }}>■ San Juan</span>
               <span style={{ ...styles.geoBadge, borderColor: '#f59e0b', color: '#f59e0b' }}>■ Región Cuyo</span>
               <span style={{ ...styles.geoBadge, borderColor: '#6b7280', color: '#6b7280' }}>■ SADI Nacional</span>
+              <WeatherBar />
             </div>
 
             {/* Fila 1: Demanda SJ + Gauge SJ + Renovable Cuyo */}
@@ -147,11 +149,12 @@ const styles = {
   },
   geoLegend: {
     display: 'flex',
-    gap: 16,
+    gap: 10,
     alignItems: 'center',
     fontSize: 12,
     color: '#718096',
     flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   geoBadge: {
     display: 'flex',
