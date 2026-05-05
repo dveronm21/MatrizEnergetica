@@ -172,6 +172,8 @@ const styles = {
     borderLeft: '3px solid #1a73e8',
     borderRadius: 12,
     overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
   },
   wrapperSADI: {
     borderLeft: '3px solid #6b7280',

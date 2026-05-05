@@ -42,6 +42,10 @@ const styles = {
     padding: '28px 32px',
     textAlign: 'center',
     boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 16,

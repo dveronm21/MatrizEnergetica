@@ -42,7 +42,7 @@ function buildSlices(snapshot) {
 const RADIAN = Math.PI / 180;
 
 function SliceLabel({ cx, cy, midAngle, innerRadius, outerRadius, pct }) {
-  if (!pct || pct < 4) return null;
+  if (!pct || pct < 7) return null;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
@@ -65,16 +65,16 @@ function CenterLabel({ viewBox, ley27Pct, incHidroPct }) {
   const { cx, cy } = viewBox;
   return (
     <>
-      <text x={cx} y={cy - 22} textAnchor="middle" fill="#52b788" fontSize={11} fontWeight={600}>
-        Ley 27.191
+      <text x={cx} y={cy - 26} textAnchor="middle" fill="#52b788" fontSize={10} fontWeight={600} letterSpacing={0.5}>
+        LEY 27.191
       </text>
-      <text x={cx} y={cy - 6} textAnchor="middle" fill="#52b788" fontSize={20} fontWeight={700}>
+      <text x={cx} y={cy - 6} textAnchor="middle" fill="#52b788" fontSize={22} fontWeight={700}>
         {ley27Pct}%
       </text>
-      <text x={cx} y={cy + 14} textAnchor="middle" fill="#1a9e9e" fontSize={11} fontWeight={600}>
-        Inc. Hidro
+      <text x={cx} y={cy + 16} textAnchor="middle" fill="#1a9e9e" fontSize={10} fontWeight={600} letterSpacing={0.5}>
+        INC. HIDRO
       </text>
-      <text x={cx} y={cy + 30} textAnchor="middle" fill="#1a9e9e" fontSize={18} fontWeight={700}>
+      <text x={cx} y={cy + 34} textAnchor="middle" fill="#1a9e9e" fontSize={20} fontWeight={700}>
         {incHidroPct}%
       </text>
     </>
@@ -119,15 +119,15 @@ export default function GenerationMatrix({ demandaActual }) {
       <p style={styles.subtitle}>% de participación</p>
       <p style={styles.badge}>SADI Nacional</p>
 
-      <ResponsiveContainer width="100%" height={280}>
+      <ResponsiveContainer width="100%" height={300}>
         <PieChart>
           <Pie
             data={slices}
             dataKey="pct"
             cx="50%"
             cy="50%"
-            innerRadius={75}
-            outerRadius={115}
+            innerRadius={82}
+            outerRadius={125}
             startAngle={90}
             endAngle={-270}
             paddingAngle={1}

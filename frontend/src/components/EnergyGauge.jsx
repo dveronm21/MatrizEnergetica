@@ -137,6 +137,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+    flex: 1,
   },
   title: { fontSize: 16, fontWeight: 600, color: '#2d3748', textAlign: 'center' },
   sub: { fontSize: 12, color: '#718096', textAlign: 'center', marginBottom: 4 },
