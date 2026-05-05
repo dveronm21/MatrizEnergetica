@@ -167,7 +167,7 @@ export default function WeatherBar() {
       }
     }
     load();
-    const id = setInterval(load, 30 * 60 * 1000); // refresh each 30 min
+    const id = setInterval(load, 15 * 60 * 1000); // refresh cada 15 min (límite Open-Meteo)
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
