@@ -83,8 +83,7 @@ export default function RegionalChart({ sanjuanDemanda, cuyoGeneracion }) {
         <div>
           <h2 style={styles.title}>Demanda y Generación Real del SADI y Regionales</h2>
           <p style={styles.subtitle}>
-            Demanda Real (MW) — Región: <strong>San Juan</strong>
-            <span style={styles.note}> · Generación: región Cuyo</span>
+            Demanda Real (MW) — Región: <strong>Cuyo</strong>
           </p>
         </div>
         <div style={styles.toggles}>
