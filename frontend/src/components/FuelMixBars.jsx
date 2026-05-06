@@ -19,8 +19,8 @@ export default function FuelMixBars({ cuyoParticipacion, cuyoGeneracion }) {
   return (
     <div style={styles.card}>
       <div style={styles.header}>
-        <h2 style={styles.title}>Detalle por Fuente</h2>
-        <span style={{ ...styles.region, color: '#f59e0b' }}>Región Cuyo · tiempo real</span>
+        <h2 style={styles.title}>Generación por Fuente — Región Cuyo</h2>
+        <span style={{ ...styles.region, color: '#f59e0b' }}>tiempo real</span>
       </div>
 
       <div style={styles.list}>

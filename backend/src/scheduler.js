@@ -3,6 +3,7 @@ const {
   getDemandaActualSADI,
   getMatrizGeneracionSADI,
   getDemandaSanJuan,
+  getDemandaCuyo,
   getGeneracionCuyo,
   getGeneracionParticipacionCuyo,
 } = require('./cammesaClient');
@@ -13,11 +14,12 @@ async function fetchAll() {
   console.log(`[${ts}] Fetching CAMMESA data...`);
 
   try {
-    const [demandaActual, matrizGeneracion, sanjuanDemanda, cuyoGeneracion, cuyoParticipacion] =
+    const [demandaActual, matrizGeneracion, sanjuanDemanda, cuyoDemanda, cuyoGeneracion, cuyoParticipacion] =
       await Promise.all([
         getDemandaActualSADI(),
         getMatrizGeneracionSADI(),
         getDemandaSanJuan(),
+        getDemandaCuyo(),
         getGeneracionCuyo(),
         getGeneracionParticipacionCuyo(),
       ]);
@@ -26,6 +28,7 @@ async function fetchAll() {
       demandaActual,
       matrizGeneracion,
       sanjuanDemanda,
+      cuyoDemanda,
       cuyoGeneracion,
       cuyoParticipacion,
       error: null,

@@ -50,10 +50,10 @@ function mergeTimeSeries(demandaArr, generacionArr) {
 }
 
 const SERIES = [
-  { key: 'demanda',      label: 'Demanda hoy',      color: '#e53e3e' },
-  { key: 'demAyer',      label: 'Demanda ayer',      color: '#fc8181' },
+  { key: 'demanda',      label: 'Demanda Cuyo hoy',  color: '#e53e3e' },
+  { key: 'demAyer',      label: 'Demanda Cuyo ayer', color: '#fc8181' },
   { key: 'generacion',   label: 'Generación Cuyo',   color: '#1a9e9e' },
-  { key: 'pctGeneracion',label: '%Gen/Dem',           color: '#805ad5' },
+  { key: 'pctGeneracion',label: '% Gen / Dem Cuyo',  color: '#805ad5' },
 ];
 
 function CustomTooltip({ active, payload, label }) {
@@ -71,9 +71,9 @@ function CustomTooltip({ active, payload, label }) {
   );
 }
 
-export default function RegionalChart({ sanjuanDemanda, cuyoGeneracion }) {
+export default function RegionalChart({ cuyoDemanda, cuyoGeneracion }) {
   const [visible, setVisible] = useState({ demanda: true, demAyer: false, generacion: true, pctGeneracion: false });
-  const chartData = mergeTimeSeries(sanjuanDemanda, cuyoGeneracion);
+  const chartData = mergeTimeSeries(cuyoDemanda, cuyoGeneracion);
 
   const toggle = key => setVisible(v => ({ ...v, [key]: !v[key] }));
 
@@ -81,9 +81,9 @@ export default function RegionalChart({ sanjuanDemanda, cuyoGeneracion }) {
     <div style={styles.card}>
       <div style={styles.header}>
         <div>
-          <h2 style={styles.title}>Demanda y Generación Real del SADI y Regionales</h2>
+          <h2 style={styles.title}>Demanda y Generación — Región Cuyo</h2>
           <p style={styles.subtitle}>
-            Demanda Real (MW) — Región: <strong>Cuyo</strong>
+            Demanda Real y Generación por Fuente (MW) · Cuyo: San Juan, Mendoza, San Luis
           </p>
         </div>
         <div style={styles.toggles}>

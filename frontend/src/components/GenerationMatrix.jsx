@@ -115,9 +115,8 @@ export default function GenerationMatrix({ demandaActual }) {
 
   return (
     <div style={{ ...styles.card, borderLeft: '3px solid #6b7280' }}>
-      <h2 style={styles.title}>Matriz de Generación Eléctrica</h2>
-      <p style={styles.subtitle}>% de participación</p>
-      <p style={styles.badge}>SADI Nacional</p>
+      <h2 style={styles.title}>Generación por Fuente — SADI Nacional</h2>
+      <p style={styles.subtitle}>% de participación por tipo de fuente</p>
 
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>

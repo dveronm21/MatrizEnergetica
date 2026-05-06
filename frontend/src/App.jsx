@@ -79,7 +79,7 @@ export default function App() {
 
             <div style={styles.wrapperSADI}>
               <RegionalChart
-                sanjuanDemanda={data.sanjuanDemanda}
+                cuyoDemanda={data.cuyoDemanda}
                 cuyoGeneracion={data.cuyoGeneracion}
               />
             </div>
