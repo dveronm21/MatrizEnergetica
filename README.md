@@ -2,69 +2,69 @@
 
 # ⚡ Matriz Energética
 
-### Real-time oriented energy monitoring dashboard
+### Panel de monitoreo para visualizar información energética y operativa
 
-**Energy systems · Operational dashboards · Data visualization · Full-stack engineering**
+**Sistemas de energía · Paneles operativos · Visualización de datos · Desarrollo full stack**
 
-[![Energy](https://img.shields.io/badge/domain-energy-F59E0B?style=for-the-badge)](#)
-[![Dashboard](https://img.shields.io/badge/product-operational%20dashboard-0A66C2?style=for-the-badge)](#)
-[![Full Stack](https://img.shields.io/badge/engineering-full--stack-111827?style=for-the-badge)](#)
+[![Energía](https://img.shields.io/badge/%C3%A1rea-energ%C3%ADa-F59E0B?style=for-the-badge)](#)
+[![Panel](https://img.shields.io/badge/producto-panel%20operativo-0A66C2?style=for-the-badge)](#)
+[![Full Stack](https://img.shields.io/badge/desarrollo-full--stack-111827?style=for-the-badge)](#)
 
 </div>
 
 ---
 
-## Overview
+## ¿Qué es este proyecto?
 
-Matriz Energética is a dashboard project designed around the visualization of energy-related operational information through a web interface and supporting backend/API components.
+Matriz Energética es un proyecto de visualización orientado a presentar información de energía y operación mediante una interfaz web, con componentes de backend y API que acompañan el procesamiento de los datos.
 
-The repository explores how infrastructure and energy data can be surfaced in a way that is useful for **operations, monitoring and executive visibility**.
+El objetivo es acercar información técnica a una vista que resulte útil tanto para **operación y monitoreo** como para una lectura ejecutiva rápida.
 
-## Repository architecture
+## Arquitectura del repositorio
 
 ```text
 MatrizEnergetica/
-├── api/               API-oriented components
-├── backend/           Backend services and data logic
-├── frontend/          Web frontend
-├── dashboard.html     Standalone dashboard experience
-├── package.json       JavaScript project configuration
-└── vercel.json        Deployment configuration
+├── api/               Componentes orientados a API
+├── backend/           Servicios y lógica de datos
+├── frontend/          Interfaz web
+├── dashboard.html     Panel independiente
+├── package.json       Configuración del proyecto JavaScript
+└── vercel.json        Configuración de despliegue
 ```
 
-## Engineering focus
+## En qué se enfoca
 
-- Operational data visualization
-- Energy-system monitoring concepts
-- Dashboard UX for technical environments
-- Backend/API separation
-- Web deployment workflows
-- Translation of engineering data into decision-friendly views
+- Visualización de datos operativos.
+- Conceptos de monitoreo energético.
+- Diseño de paneles para entornos técnicos.
+- Separación entre frontend, backend y API.
+- Despliegue web.
+- Conversión de datos de ingeniería en información útil para tomar decisiones.
 
-## Why it matters
+## ¿Por qué es importante?
 
-Energy environments generate large amounts of technical data, but the real engineering challenge is turning that data into information that operators and decision-makers can interpret quickly.
+Los entornos energéticos generan mucha información técnica. El desafío real no es solamente obtener esos datos, sino presentarlos de una manera que un operador o responsable pueda interpretar con rapidez.
 
-This project focuses on that interface between **OT/energy data and modern software engineering**.
+Este proyecto trabaja justamente en esa unión entre **datos de energía/OT y desarrollo de software moderno**.
 
-## Portfolio relevance
+## Qué demuestra este proyecto
 
-Matriz Energética demonstrates experience combining:
+Matriz Energética combina experiencia en:
 
-**Energy · OT concepts · Monitoring · Web development · Data visualization · Infrastructure**
+**Energía · Conceptos OT · Monitoreo · Desarrollo web · Visualización de datos · Infraestructura**
 
-Together with my networking and cybersecurity projects, it represents a broader approach to engineering systems that connect physical infrastructure with software and operational visibility.
+Junto con mis proyectos de redes y ciberseguridad, forma parte de una línea de trabajo enfocada en conectar infraestructura física con software y visibilidad operativa.
 
-## Status
+## Estado
 
-Active development / technical showcase. Architecture and functionality may evolve as the project expands.
+Proyecto en desarrollo activo y utilizado como muestra técnica. La arquitectura y sus funciones pueden seguir evolucionando a medida que se incorporen nuevas capacidades.
 
 ---
 
 <div align="center">
 
-**Built by [Douglas Verón](https://github.com/dveronm21)**
+**Desarrollado por [Douglas Verón](https://github.com/dveronm21)**
 
-*Infrastructure · Networking · Cybersecurity · Energy Systems · Automation · Software Engineering*
+*Infraestructura · Redes · Ciberseguridad · Sistemas de energía · Automatización · Ingeniería de software*
 
 </div>
