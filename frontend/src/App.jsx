@@ -16,7 +16,7 @@ export default function App() {
     <div style={styles.page}>
       <header style={styles.header}>
         <div style={styles.logoGroup}>
-          <img src="/logo-epse.png" alt="EPSE" style={styles.logoImg} />
+          <div style={styles.logoMark} aria-hidden="true">⚡</div>
           <div>
             <div style={styles.logoTitle}>Sistema Eléctrico — San Juan</div>
             <div style={styles.logoSub}>Datos en tiempo real · Fuente CAMMESA</div>
@@ -97,7 +97,7 @@ export default function App() {
             {' '}· Actualización cada 5 min
           </span>
           <span style={styles.author}>
-            Desarrollado por <strong>Douglas Verón</strong> · EPSE San Juan
+            Proyecto técnico desarrollado por <strong>Douglas Verón</strong>
           </span>
         </div>
       </footer>
@@ -125,7 +125,17 @@ const styles = {
     boxShadow: '0 2px 8px rgba(26,115,232,0.08)',
   },
   logoGroup: { display: 'flex', alignItems: 'center', gap: 14 },
-  logoImg: { height: 48, objectFit: 'contain' },
+  logoMark: {
+    width: 48,
+    height: 48,
+    display: 'grid',
+    placeItems: 'center',
+    borderRadius: 12,
+    background: 'linear-gradient(135deg, #f59e0b, #f97316)',
+    color: '#fff',
+    fontSize: 25,
+    boxShadow: '0 4px 12px rgba(245,158,11,0.25)',
+  },
   logoTitle: { fontSize: 17, fontWeight: 700, color: '#1a2a4a', letterSpacing: -0.2 },
   logoSub: { fontSize: 11, color: '#718096', marginTop: 1 },
   headerRight: { display: 'flex', alignItems: 'center', gap: 12 },
